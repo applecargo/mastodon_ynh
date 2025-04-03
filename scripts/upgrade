@@ -16,7 +16,7 @@ config="$install_dir/live/.env.production"
 #=================================================
 # STOP SYSTEMD SERVICE
 #=================================================
-ynh_script_progression --message="Stopping a systemd service..." --weight=1
+ynh_script_progression --message="[applecargo] Stopping a systemd service..." --weight=1
 
 if ynh_compare_current_package_version --comparison lt --version "4.2.8~ynh2"; then
 	# Workaround for pre-packagingv2 versions
@@ -32,7 +32,7 @@ fi
 #=================================================
 # ENSURE DOWNWARD COMPATIBILITY
 #=================================================
-ynh_script_progression --message="Ensuring downward compatibility..." --weight=1
+ynh_script_progression --message="[applecargo] Ensuring downward compatibility..." --weight=1
 
 # Set `service` settings to support `yunohost app shell` command
 if [[ -z "${service:-}" ]]; then
@@ -71,7 +71,7 @@ fi
 #=================================================
 # ADD SWAP IF NEEDED
 #=================================================
-ynh_script_progression --message="Adding swap if needed..." --weight=1
+ynh_script_progression --message="[applecargo] Adding swap if needed..." --weight=1
 
 total_memory=$(ynh_get_ram --total)
 swap_needed=0
@@ -87,7 +87,7 @@ ynh_add_swap --size=$swap_needed
 #=================================================
 # UPGRADE DEPENDENCIES
 #=================================================
-ynh_script_progression --message="Upgrading Ruby and NodeJS..." --weight=1
+ynh_script_progression --message="[applecargo] Upgrading Ruby and NodeJS..." --weight=1
 
 ynh_exec_warn_less ynh_install_ruby --ruby_version=$ruby_version
 ynh_exec_warn_less ynh_install_nodejs --nodejs_version=$nodejs_version
@@ -100,7 +100,7 @@ ynh_exec_warn_less ynh_install_nodejs --nodejs_version=$nodejs_version
 
 if [ "$upgrade_type" == "UPGRADE_APP" ]
 then
-	ynh_script_progression --message="Upgrading source files..." --weight=1
+	ynh_script_progression --message="[applecargo] Upgrading source files..." --weight=1
 
 	# Download, check integrity, uncompress and patch the source from manifest.toml
 	ynh_setup_source --dest_dir="$install_dir/live" --full_replace=1 --keep="public/system .env.production"
@@ -113,7 +113,7 @@ fi
 #=================================================
 # BUILD ASSETS
 #=================================================
-ynh_script_progression --message="Building assets..." --weight=1
+ynh_script_progression --message="[applecargo] Building assets..." --weight=1
 
 pushd "$install_dir/live"
 	ynh_use_ruby
@@ -135,7 +135,7 @@ chown -R "$app:www-data" "$install_dir/live/public"
 #=================================================
 # REAPPLY SYSTEM CONFIGURATIONS
 #=================================================
-ynh_script_progression --message="Upgrading system configurations related to $app..." --weight=1
+ynh_script_progression --message="[applecargo] Upgrading system configurations related to $app..." --weight=1
 
 ynh_add_nginx_config
 
@@ -161,7 +161,7 @@ ynh_use_logrotate --non-append
 #=================================================
 # UPDATE A CONFIG FILE
 #=================================================
-ynh_script_progression --message="Updating a config file..." --weight=1
+ynh_script_progression --message="[applecargo] Updating a config file..." --weight=1
 
 if ynh_compare_current_package_version --comparison lt --version "4.3.2~ynh1"; then
 	pushd "$install_dir/live"
@@ -188,25 +188,25 @@ chown $app:$app "$config"
 #=================================================
 # APPLY MIGRATIONS
 #=================================================
-ynh_script_progression --message="Applying migrations..." --weight=1
+ynh_script_progression --message="[applecargo] Applying migrations... --> pass" --weight=1
 
 pushd "$install_dir/live"
 	ynh_use_ruby
-	ynh_exec_warn_less ynh_exec_as $app RAILS_ENV=production $ynh_ruby_load_path $ld_preload bin/bundle exec rails db:migrate --quiet
-	ynh_exec_warn_less ynh_exec_as $app RAILS_ENV=production $ynh_ruby_load_path $ld_preload bin/bundle exec rails assets:precompile --quiet
+	#ynh_exec_warn_less ynh_exec_as $app RAILS_ENV=production $ynh_ruby_load_path $ld_preload bin/bundle exec rails db:migrate --quiet
+	#ynh_exec_warn_less ynh_exec_as $app RAILS_ENV=production $ynh_ruby_load_path $ld_preload bin/bundle exec rails assets:precompile --quiet
 popd
 
 #=================================================
 # START SYSTEMD SERVICE
 #=================================================
-ynh_script_progression --message="Starting a systemd service..." --weight=1
+ynh_script_progression --message="[applecargo] Starting a systemd service... --> pass" --weight=1
 
-ynh_systemd_action --service_name=${app}-web --action="restart" --log_path=/var/log/$app/$app-web.log --line_match="Listening on"
-ynh_systemd_action --service_name=${app}-sidekiq --action="start" --log_path=/var/log/$app/$app-sidekiq.log --line_match="Schedules Loaded"
-ynh_systemd_action --service_name=${app}-streaming --action="start" --log_path=/var/log/$app/$app-streaming.log --line_match="Streaming API now listening"
+#ynh_systemd_action --service_name=${app}-web --action="restart" --log_path=/var/log/$app/$app-web.log --line_match="Listening on"
+#ynh_systemd_action --service_name=${app}-sidekiq --action="start" --log_path=/var/log/$app/$app-sidekiq.log --line_match="Schedules Loaded"
+#ynh_systemd_action --service_name=${app}-streaming --action="start" --log_path=/var/log/$app/$app-streaming.log --line_match="Streaming API now listening"
 
 #=================================================
 # END OF SCRIPT
 #=================================================
 
-ynh_script_progression --message="Upgrade of $app completed" --last
+ynh_script_progression --message="[applecargo] Upgrade of $app completed" --last
